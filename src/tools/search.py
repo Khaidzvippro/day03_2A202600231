@@ -62,7 +62,7 @@ def _parse_arxiv_entry(entry: ET.Element, ns: Dict[str, str]) -> Dict[str, str]:
         "id": paper_id,
         "title": title_text,
         "authors": ", ".join(authors),
-        "summary": summary_text[:300] + "..." if len(summary_text) > 300 else summary_text,
+        "summary": summary_text,
         "published": published_text,
         "link": link,
     }
@@ -189,6 +189,7 @@ def get_paper_abstract(paper_id: str) -> str:
             f"Authors: {authors}\n"
             f"Published: {published}\n"
             f"Abstract: {full_abstract}\n"
+            f"Link: https://arxiv.org/abs/{paper_id}\n"
         )
 
     except requests.exceptions.RequestException as e:
@@ -222,7 +223,8 @@ def _fallback_mock_search(query: str, error_msg: str) -> str:
                     f"[{i}] Title: {p['title']}\n"
                     f"    ID: {p.get('id', 'N/A')}\n"
                     f"    Authors: {p.get('authors', 'N/A')}\n"
-                    f"    Summary: {p.get('summary', 'N/A')[:300]}...\n"
+                    f"    Summary: {p.get('summary', 'N/A')}\n"
+                    f"    Link: https://arxiv.org/abs/{p.get('id', 'N/A')}\n"
                 )
             return "\n".join(lines)
 
