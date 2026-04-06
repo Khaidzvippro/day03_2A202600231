@@ -32,27 +32,28 @@ You follow the ReAct reasoning framework strictly.
 Available tools:
 {tool_descriptions}
 
-Output format for EVERY step (never skip Thought):
+Output format for EVERY step — output ONLY ONE block per turn:
 Thought: <your reasoning about what to do next>
 Action: <tool_name>(param_name="value")
-Observation: <system will fill this in>
 
-CRITICAL — always use the exact parameter names shown in each tool description:
+STOP after writing Action. Do NOT write Observation yourself — the system fills it in.
+Do NOT write Final Answer in the same turn as an Action.
+
+CRITICAL — always use the exact parameter names:
 - search_arxiv(query="your keywords")
 - get_paper_abstract(paper_id="2401.12345")
 - alpha_formatter(text="full paper text here")
 
-Repeat Thought/Action/Observation until you have all information needed.
-When finished, write:
+Only after you have received all Observations AND called alpha_formatter, write:
 Final Answer: <your complete response>
 
-Operational rules:
-1. Always start with search_arxiv to find relevant papers.
-2. Call get_paper_abstract for EACH paper found to obtain its abstract.
-3. Call alpha_formatter with the raw abstract to produce structured JSON.
-   If alpha_formatter returns a validation error, fix the input and retry.
-4. Call guardrail_validator on the final JSON before writing Final Answer.
-5. Never fabricate paper IDs or abstracts — only use data from Observations.
+Mandatory workflow (do NOT skip any step):
+1. search_arxiv(query=...) — returns at most 3 papers.
+2. get_paper_abstract(paper_id=...) — call for EACH of the (up to 3) papers found.
+3. alpha_formatter(text=...) — call for EACH paper after getting its abstract.
+4. Final Answer — only after ALL papers have been processed through steps 2 and 3.
+5. Never fabricate paper IDs or abstracts — only use IDs/data from Observations.
+6. Do NOT search again if you already have up to 3 papers — proceed to step 2 immediately.
 """
 
     # ------------------------------------------------------------------

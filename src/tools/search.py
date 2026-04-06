@@ -68,7 +68,10 @@ def _parse_arxiv_entry(entry: ET.Element, ns: Dict[str, str]) -> Dict[str, str]:
     }
 
 
-def search_arxiv(query: str, max_results: int = 3) -> str:
+MAX_PAPERS = 3  # Hard cap — agent processes at most this many papers per query
+
+
+def search_arxiv(query: str, max_results: int = MAX_PAPERS) -> str:
     """Search for scientific papers on ArXiv by keyword.
 
     This tool queries the ArXiv API for papers matching the given search
@@ -76,12 +79,13 @@ def search_arxiv(query: str, max_results: int = 3) -> str:
 
     Args:
         query: A search query string (e.g., "Alpha Momentum stock market").
-        max_results: Maximum number of papers to return (default: 3).
+        max_results: Maximum number of papers to return (capped at 3).
 
     Returns:
         A formatted string containing the search results, or an error
         message if the API call fails.
     """
+    max_results = min(max_results, MAX_PAPERS)  # enforce hard cap
     # Try real API first
     try:
         # Use category filter for quantitative finance when query seems financial
@@ -243,7 +247,8 @@ SEARCH_ARXIV_TOOL = {
         "Search for scientific papers on ArXiv by keyword. "
         "Parameter: query (string) — the search keywords (e.g., 'momentum stock market'). "
         "Call format: search_arxiv(query=\"your search terms\"). "
-        "Returns a list of papers with title, ID, authors, published date, and summary."
+        "Returns at most 3 papers with title, ID, authors, published date, and summary. "
+        "You must process ALL papers returned (up to 3) through the full workflow."
     ),
     "function": search_arxiv,
 }

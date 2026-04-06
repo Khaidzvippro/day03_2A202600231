@@ -43,7 +43,8 @@ else:
         raise RuntimeError("OPENAI_API_KEY is not set in .env")
     provider = OpenAIProvider(model_name=model_name, api_key=api_key)
 
-agent = ReActAgent(llm=provider, tools=ALL_TOOLS, max_steps=5)
+max_steps = int(os.getenv("AGENT_MAX_STEPS", "20"))
+agent = ReActAgent(llm=provider, tools=ALL_TOOLS, max_steps=max_steps)
 
 class ChatRequest(BaseModel):
     query: str
