@@ -44,32 +44,28 @@ def extract_abstract(text: str, max_sentences: int = 5) -> Optional[str]:
     """
     if not text:
         return None
-    
-    # Clean the text first
-    text = clean_text(text)
-    
+
+    # Work on original text so newlines are preserved for structural detection.
+    # clean_text collapses all whitespace to a single space, which would destroy
+    # the \n\n paragraph boundaries the regex relies on.
+
     # Try to find explicit "Abstract" section
     abstract_match = re.search(
         r'(?:abstract|summary|overview)\s*[:\-]?\s*(.+?)(?=\n\n|\nintroduction|\nbackground|\nmethod|$)',
         text,
         re.IGNORECASE | re.DOTALL
     )
-    
+
     if abstract_match:
-        abstract = abstract_match.group(1).strip()
-        # Clean the extracted abstract
-        abstract = clean_text(abstract)
-        return abstract
-    
-    # If no explicit abstract, extract first paragraph
-    paragraphs = text.split('\n\n')
+        return clean_text(abstract_match.group(1))
+
+    # If no explicit abstract, extract first non-empty paragraph
+    paragraphs = [p for p in text.split('\n\n') if p.strip()]
     if paragraphs:
         first_para = clean_text(paragraphs[0])
-        # Limit to max_sentences
         sentences = re.split(r'(?<=[.!?])\s+', first_para)
-        limited_abstract = ' '.join(sentences[:max_sentences])
-        return limited_abstract
-    
+        return ' '.join(sentences[:max_sentences])
+
     return None
 
 

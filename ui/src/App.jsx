@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import './index.css'
+import './App.css'
 
 function App() {
   const [messages, setMessages] = useState([

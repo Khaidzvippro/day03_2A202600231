@@ -8,7 +8,7 @@ from src.telemetry.logger import logger
 class ReActAgent:
     """
     ReAct-style Agent following the Thought → Action → Observation loop.
-    Supports: search_arxiv, get_paper_summary, alpha_formatter,
+    Supports: search_arxiv, get_paper_abstract, alpha_formatter,
               performance_monitor (BONUS), guardrail_validator.
     """
 
@@ -43,7 +43,7 @@ Final Answer: <your complete response>
 
 Operational rules:
 1. Always start with search_arxiv to find relevant papers.
-2. Call get_paper_summary for EACH paper found to obtain its abstract.
+2. Call get_paper_abstract for EACH paper found to obtain its abstract.
 3. Call alpha_formatter with the raw abstract to produce structured JSON.
    If alpha_formatter returns a validation error, fix the input and retry.
 4. Call guardrail_validator on the final JSON before writing Final Answer.
