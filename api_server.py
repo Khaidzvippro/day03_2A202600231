@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+from src.core.openai_provider import OpenAIProvider
 from src.core.gemini_provider import GeminiProvider
 from src.agent.agent import ReActAgent
 from src.tools import ALL_TOOLS
@@ -27,13 +28,21 @@ app.add_middleware(
 
 # Load configuration and initialize Agent
 load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-model_name = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
 
-if not api_key:
-    raise RuntimeError("GEMINI_API_KEY is not set in .env")
+provider_name = os.getenv("DEFAULT_PROVIDER", "openai").lower()
+model_name = os.getenv("DEFAULT_MODEL", "gpt-4o")
 
-provider = GeminiProvider(model_name=model_name, api_key=api_key)
+if provider_name == "google":
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not set in .env")
+    provider = GeminiProvider(model_name=model_name, api_key=api_key)
+else:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set in .env")
+    provider = OpenAIProvider(model_name=model_name, api_key=api_key)
+
 agent = ReActAgent(llm=provider, tools=ALL_TOOLS, max_steps=5)
 
 class ChatRequest(BaseModel):
