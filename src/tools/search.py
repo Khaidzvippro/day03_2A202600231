@@ -241,8 +241,9 @@ SEARCH_ARXIV_TOOL = {
     "name": "search_arxiv",
     "description": (
         "Search for scientific papers on ArXiv by keyword. "
-        "Input: a search query string (e.g., 'Alpha Momentum stock market'). "
-        "Returns a list of papers with title, authors, published date, and summary."
+        "Parameter: query (string) — the search keywords (e.g., 'momentum stock market'). "
+        "Call format: search_arxiv(query=\"your search terms\"). "
+        "Returns a list of papers with title, ID, authors, published date, and summary."
     ),
     "function": search_arxiv,
 }
@@ -250,9 +251,10 @@ SEARCH_ARXIV_TOOL = {
 GET_PAPER_ABSTRACT_TOOL = {
     "name": "get_paper_abstract",
     "description": (
-        "Fetch the full abstract of a specific ArXiv paper by its ID. "
-        "Input: an ArXiv paper ID string (e.g., '2401.12345'). "
-        "Returns the paper's title, authors, and full abstract text."
+        "Fetch the full abstract of a specific ArXiv paper by its ArXiv ID. "
+        "Parameter: paper_id (string) — the ArXiv ID (e.g., '2401.12345'). "
+        "Call format: get_paper_abstract(paper_id=\"2401.12345\"). "
+        "Returns the paper's title, authors, published date, and full abstract text."
     ),
     "function": get_paper_abstract,
 }

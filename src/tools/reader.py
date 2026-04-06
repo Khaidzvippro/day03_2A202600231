@@ -95,5 +95,30 @@ def extract_metadata(text: str) -> Dict[str, Any]:
         title = clean_text(title_match.group(1))
         if len(title) > 10 and len(title) < 300:  # Reasonable title length
             metadata['title'] = title
-    
+
     return metadata
+
+
+# ── Tool Registry Entries ─────────────────────────────────────────────────────
+
+EXTRACT_ABSTRACT_TOOL = {
+    "name": "extract_abstract",
+    "description": (
+        "Extract and clean the abstract section from raw paper text. "
+        "Parameter: text (string) — raw paper content. "
+        "Call format: extract_abstract(text=\"raw paper content here\"). "
+        "Returns the cleaned abstract string, or None if not found."
+    ),
+    "function": extract_abstract,
+}
+
+EXTRACT_METADATA_TOOL = {
+    "name": "extract_metadata",
+    "description": (
+        "Extract structured metadata (title, abstract, word count) from raw paper text. "
+        "Parameter: text (string) — raw paper content. "
+        "Call format: extract_metadata(text=\"raw paper content here\"). "
+        "Returns a dict with keys: abstract, cleaned_text, length, word_count, title."
+    ),
+    "function": extract_metadata,
+}

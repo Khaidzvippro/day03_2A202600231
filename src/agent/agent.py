@@ -34,8 +34,13 @@ Available tools:
 
 Output format for EVERY step (never skip Thought):
 Thought: <your reasoning about what to do next>
-Action: <tool_name>(key="value", key2=value2)
+Action: <tool_name>(param_name="value")
 Observation: <system will fill this in>
+
+CRITICAL — always use the exact parameter names shown in each tool description:
+- search_arxiv(query="your keywords")
+- get_paper_abstract(paper_id="2401.12345")
+- alpha_formatter(text="full paper text here")
 
 Repeat Thought/Action/Observation until you have all information needed.
 When finished, write:
@@ -119,14 +124,25 @@ Operational rules:
     # ------------------------------------------------------------------
 
     def _execute_tool(self, tool_name: str, args_str: str) -> str:
+        import inspect
+
         for tool in self.tools:
             if tool["name"] == tool_name:
                 fn = tool.get("function")
                 if not callable(fn):
                     return f"[Error] Tool '{tool_name}' has no callable function defined."
                 try:
-                    kwargs = self._parse_args(args_str)
+                    kwargs = self._parse_args(args_str, fn)
                     return str(fn(**kwargs))
+                except TypeError:
+                    # Wrong param names — remap values to positional params in order
+                    try:
+                        params = list(inspect.signature(fn).parameters.keys())
+                        values = list(self._parse_args(args_str, fn).values())
+                        remapped = {params[i]: values[i] for i in range(min(len(params), len(values)))}
+                        return str(fn(**remapped))
+                    except Exception as exc2:
+                        return f"[Error] {tool_name} raised: {exc2}"
                 except Exception as exc:
                     return f"[Error] {tool_name} raised: {exc}"
 
@@ -134,37 +150,50 @@ Operational rules:
         return f"[Error] Tool '{tool_name}' not found. Available tools: {available}"
 
     # ------------------------------------------------------------------
-    # Argument Parser  (key="val", key=123, key=word)
+    # Argument Parser
+    # Handles: key="val", key=123, key=word, and bare positional strings
     # ------------------------------------------------------------------
 
-    def _parse_args(self, args_str: str) -> Dict[str, Any]:
+    def _parse_args(self, args_str: str, fn: Any = None) -> Dict[str, Any]:
+        import inspect
+
         if not args_str.strip():
             return {}
 
         kwargs: Dict[str, Any] = {}
-        pattern = r'(\w+)\s*=\s*("(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|[\w.\-]+)'
+        kw_pattern = r'(\w+)\s*=\s*("(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|[\w.\-]+)'
 
-        for match in re.finditer(pattern, args_str):
+        for match in re.finditer(kw_pattern, args_str):
             key = match.group(1)
             raw = match.group(2)
+            kwargs[key] = self._coerce(raw)
 
-            # Strip surrounding quotes
-            if (raw.startswith('"') and raw.endswith('"')) or \
-               (raw.startswith("'") and raw.endswith("'")):
-                val: Any = raw[1:-1]
-            else:
-                # Try numeric coercion
+        # If no kwargs matched, treat the whole string as a positional arg
+        # and map it to the first parameter of the function
+        if not kwargs and args_str.strip():
+            raw = args_str.strip().strip('"\'')
+            if fn is not None:
                 try:
-                    val = int(raw)
-                except ValueError:
-                    try:
-                        val = float(raw)
-                    except ValueError:
-                        val = raw
-
-            kwargs[key] = val
+                    first_param = next(iter(inspect.signature(fn).parameters))
+                    kwargs[first_param] = raw
+                except (StopIteration, ValueError):
+                    pass
 
         return kwargs
+
+    def _coerce(self, raw: str) -> Any:
+        """Strip quotes and coerce numeric strings."""
+        if (raw.startswith('"') and raw.endswith('"')) or \
+           (raw.startswith("'") and raw.endswith("'")):
+            return raw[1:-1]
+        try:
+            return int(raw)
+        except ValueError:
+            pass
+        try:
+            return float(raw)
+        except ValueError:
+            return raw
 
     # ------------------------------------------------------------------
     # Performance Monitor (BONUS) — called directly, not via LLM loop
